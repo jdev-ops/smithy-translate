@@ -16,6 +16,7 @@ import mill.scalalib._
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib.api.Util._
 import mill.scalalib.publish._
+import mill.scalajslib._
 import mill.define.Sources
 import os._
 
@@ -108,14 +109,13 @@ trait ScalaVersionModule extends ScalaModule with ScalafmtModule {
 }
 
 trait BaseScalaNoPublishModule extends BaseModule with ScalaVersionModule {
-
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"org.typelevel:::kind-projector:0.13.2"
   )
 }
 
 trait BaseScalaModule extends BaseScalaNoPublishModule with BasePublishModule
-trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
+trait BaseScalaJSModule extends BaseScalaNoPublishModule with ScalaJSModule {
   def scalaJSVersion = "1.11.0"
   def moduleKind = ModuleKind.CommonJSModule
 }
@@ -229,6 +229,71 @@ object formatter extends BaseModule { outer =>
 
 }
 
+object `formatter-extension` extends BaseScalaJSModule {
+  override def moduleDeps =
+    Seq((scalablytyped.`scalablytyped-module`: JavaModule), formatter.js)
+
+  def extensionDist = T { T.workspace / "dist" }
+  def extensionBinary = T { extensionDist() / "extension.js" }
+  def extensionBinaryMap = T { extensionDist() / "extension.js.map" }
+
+  def compile = T {
+    yarnInstall()
+    super.compile()
+  }
+
+  def prepareExtension: T[SrcAndMap] = T {
+    yarnInstall()
+
+    val js = fullOpt()
+    val mapJs = os.Path(js.path.toString.replace("out.js", "out.js.map"))
+
+    SrcAndMap(PathRef(js.path), PathRef(mapJs))
+  }
+
+  def buildExtension = T {
+    val SrcAndMap(bundled, bundledMap) = prepareExtension()
+
+    val dist = extensionDist()
+
+    os.remove.all(dist)
+    os.makeDir.all(dist)
+    val target = extensionBinary()
+
+    os.copy.over(bundled.path, target)
+    os.copy.over(bundledMap.path, extensionBinaryMap())
+
+    PathRef(dist)
+  }
+
+  def vscePackage = T {
+    yarnInstall()
+    runYarn("vsce", "package", "--yarn").call(cwd = T.workspace)
+  }
+
+  def vscePublish = T {
+    yarnInstall()
+    runYarn("vsce", "publish").call(cwd = T.workspace)
+  }
+
+  def startVSCode = T.input {
+    val dir = T.workspace
+    val smithySources = `formatter-extension`.millSourcePath / "smithy"
+    os.proc(
+      "code",
+      s"--extensionDevelopmentPath=$dir",
+      smithySources.toString()
+    ).call(dir)
+  }
+
+  def runVSCode = T {
+    yarnInstall()
+    buildExtension()
+
+    startVSCode()
+  }
+}
+
 object traits extends BaseJavaModule {
   def ivyDeps = Agg(
     Deps.smithy.model
@@ -336,6 +401,15 @@ object transitive extends BaseScalaModule {
     Deps.smithy.diff
   )
   object tests extends Tests with BaseMunitTests
+}
+
+def yarnInstall: T[Unit] = T {
+  runYarn("install").call(cwd = T.workspace)
+}
+
+private def runYarn(args: String*) = {
+  val allArgs = "yarn" +: args
+  os.proc(allArgs)
 }
 
 object Deps {
@@ -500,4 +574,10 @@ def scalacOptionsFor(scalaVersion: String): Seq[String] = {
   val versionedOpts = allScalacOptions.filter(_.isSupported(scalaVer)).map(_.name)
 
   commonOpts ++ versionedOpts
+}
+
+final case class SrcAndMap(src: PathRef, map: PathRef)
+object SrcAndMap {
+  implicit def rw: upickle.default.ReadWriter[SrcAndMap] =
+    upickle.default.macroRW
 }

@@ -1,0 +1,38 @@
+{
+  "name": "smithy-formatter",
+  "displayName": "Smithy Formatter",
+  "description": "Formats code written with Smithy",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "repository": {
+    "url": "https://github.com/disneystreaming/smithy-translate",
+    "type": "github"
+  },
+  "publisher": "disneystreaming",
+  "categories": [
+    "Formatters"
+  ],
+  "main": "./dist/extension",
+  "activationEvents": [
+    "onLanguage:smithy"
+  ],
+  "capabilities": {
+    "documentFormattingProvider": "true"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "smithy"
+      }
+    ]
+  },
+  "dependencies": {
+    "@types/vscode": "^1.70.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4",
+    "vsce": "^2.10.0"
+  }
+}

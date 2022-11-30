@@ -52,6 +52,7 @@ dynamodb_lib
 
 # Node
 node_modules
+yarn.lock
 modules/website/translated_docs
 modules/website/build/
 modules/website/yarn.lock

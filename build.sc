@@ -225,6 +225,52 @@ object formatter extends BaseModule { outer =>
     override def sources: Sources = T.sources {
       super.sources() ++ jsSources()
     }
+
+    val packageJson = """|{
+                         |  "name": "smithy-formatter-api",
+                         |  "version": "0.1.0",
+                         |  "description": "Exposes a function to format Smithy code.",
+                         |  "main": "index.js",
+                         |  "repository": {
+                         |    "type": "git",
+                         |    "url": "git://github.com/disneystreaming/smithy-translate.git"
+                         |  },
+                         |  "keywords": [
+                         |    "smithy",
+                         |    "formatter"
+                         |  ],
+                         |  "author": "David Francoeur",
+                         |  "license": "SEE LICENSE IN LICENSE",
+                         |  "bugs": {
+                         |    "url": "https://github.com/disneystreaming/smithy-translate/issues"
+                         |  },
+                         |  "homepage": "https://github.com/disneystreaming/smithy-translate#readme"
+                         |}""".stripMargin
+
+    val typings = """|declare module "smithy-formatter-api" {
+                     |  /**
+                     |   * SmithyFormatter takes input as a string and produces a `Result`. The result
+                     |   * can either contain an `error` or the formatted content under `value`.
+                     |   */
+                     |  namespace SmithyFormatter {
+                     |    function format(content: string): Result;
+                     |  }
+                     |
+                     |  interface Result {
+                     |    error: string | undefined;
+                     |    value: string | undefined;
+                     |  }
+                     |}""".stripMargin
+
+    def prepareNpmPackage: T[PathRef] = T {
+      val source = fullLinkJS().dest.path
+      val dest = T.dest
+      os.write(dest / "package.json", packageJson)
+      os.write(source / "index.d.ts", typings)
+      os.copy(source / "main.js", dest / "index.js")
+      os.copy(source / "main.js.map", dest / "index.js.map")
+      PathRef(dest)
+    }
   }
 
 }

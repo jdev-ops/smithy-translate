@@ -20,12 +20,21 @@ import smithytranslate.formatter.writers.Writer.WriterOps
 
 import scala.scalajs.js.annotation._
 
+final class Result(underlying: Either[String, String]) {
+  @JSExport
+  val error: String = underlying.swap.getOrElse(null)
+  @JSExport
+  val value: String = underlying.getOrElse(null)
+}
+
 @JSExportTopLevel("SmithyFormatter")
 object SmithyFormatter {
   @JSExport
-  def format(content: String): String = {
-    SmithyParserLive
-      .parse(content)
-      .fold(err => throw new RuntimeException(err), _.write)
+  def format(content: String): Result = {
+    new Result(
+      SmithyParserLive
+        .parse(content)
+        .map(_.write)
+    )
   }
 }

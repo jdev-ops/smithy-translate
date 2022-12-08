@@ -86,6 +86,9 @@ object string_ops {
       string
   }
 
+  def isTooWide[A](values: List[A], limit: Integer = 3): Boolean =
+    values.size >= limit
+
   def indentList[A: Show](
       value: List[A],
       delimiter: String,
@@ -182,6 +185,11 @@ object string_ops {
   def suffix(string: String, s: String): String = {
     if (string.isEmpty) string
     else string + s
+  }
+
+  def justIndent(value: String, indentLevel: Int): String = {
+    val padding = " " * indentLevel
+    padding + value
   }
 
 }

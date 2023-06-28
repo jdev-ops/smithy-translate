@@ -101,6 +101,7 @@ class Compiler() {
         } else Nil
       }
       .toList
+      .filter(_.path(0) != "smithytranslate")
   }
 
   private def filePath(fqn: Fqn): List[String] = {

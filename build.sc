@@ -51,7 +51,9 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
 
-  override def sonatypeHost = Some(SonatypeHost.s01)
+  override def sonatypeUri = "http://nexus.service.dc1.consul:8081/repository/personal-release"
+  override def sonatypeSnapshotUri = "http://nexus.service.dc1.consul:8081/repository/personal-snapshot"
+  override def stagingRelease = false
 
   def pomSettings = PomSettings(
     description = "A smithy-translation toolkit",
@@ -358,36 +360,6 @@ object proto extends Module {
     }
   }
 
-  object examples extends BaseScalaModule with ScalaPBModule {
-    def scalaPBVersion = Deps.scalapb.version
-
-    def smithyFiles = T.sources {
-      os.walk(millSourcePath / "smithy", skip = !_.last.endsWith(".smithy"))
-        .map(p => PathRef(p))
-    }
-
-    def cliRunOutput = millSourcePath / "protobuf"
-
-    def scalaPBSources = T.sources { runCli()() }
-
-    // required to include wrappers proto definitions
-    def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
-
-    def runCli() = T.command {
-      os.remove.all(cliRunOutput)
-      os.makeDir.all(cliRunOutput)
-      val input = smithyFiles().toList.map(_.path)
-      val f = cli.runProtoAux()
-      f(input, cliRunOutput)
-      cliRunOutput
-    }
-
-    def ivyDeps = Agg(
-      Deps.grpc.netty,
-      Deps.grpc.services,
-      Deps.scalapb.runtimeGrpc
-    )
-  }
 }
 
 object transitive extends BaseScalaModule {

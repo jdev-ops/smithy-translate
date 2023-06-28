@@ -139,18 +139,18 @@ object ProtoIR {
     }
 
     private val smithyTranslateImportFqn =
-      Namespacing.namespaceToFqn("smithytranslate")
+      Namespacing.namespaceToFqn("zenit/common")
 
     val BigInteger = MessageType(
-      Fqn(Some(List("smithytranslate")), "BigInteger"),
+      Fqn(Some(List("com.zenit.common")), "BigInteger"),
       smithyTranslateImportFqn
     )
     val BigDecimal = MessageType(
-      Fqn(Some(List("smithytranslate")), "BigDecimal"),
+      Fqn(Some(List("com.zenit.common")), "BigDecimal"),
       smithyTranslateImportFqn
     )
     val Timestamp = MessageType(
-      Fqn(Some(List("smithytranslate")), "Timestamp"),
+      Fqn(Some(List("com.zenit.common")), "Timestamp"),
       smithyTranslateImportFqn
     )
 
